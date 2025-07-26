@@ -6,8 +6,15 @@ param(
     [switch]$HideClosed,  # Hide closed/filtered ports (show by default)
     [int]$Timeout = 1000, # Connection timeout in milliseconds
     [int]$Interval = 0,   # Basic interval between port scans in milliseconds
-    [int]$Jitter = 0      # Random variation range for interval in milliseconds
+    [int]$Jitter = 0,     # Random variation range for interval in milliseconds
+    [string]$Outfile      # Output file path (default: result_portscan_YYYYMMDD.txt)
 )
+
+# Set output file path
+if (-not $Outfile) {
+    $dateString = Get-Date -Format "yyyyMMdd"
+    $Outfile = "result_portscan_$dateString.txt"
+}
 
 # Get target hosts: use arguments if specified, otherwise read from file
 if ($h) {
@@ -47,7 +54,21 @@ Write-Host "Number of target hosts: $($Targets.Count)"
 Write-Host "Number of target ports: $($Ports.Count)"
 Write-Host "Timeout: $Timeout ms"
 Write-Host "Interval: $Interval ms $(if ($Jitter -gt 0) { "(±$Jitter ms jitter)" })"
+Write-Host "Output file: $Outfile"
 Write-Host "--------------------------------"
+
+# Initialize output content with scan information
+$outputContent = @()
+$outputContent += "Port Scan Results"
+$outputContent += "Generated: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
+$outputContent += "Target source: $(if ($h) { 'Command line arguments' } else { $HostFile })"
+$outputContent += "Port source: $(if ($p) { 'Command line arguments' } elseif ($PortFile) { $PortFile } else { 'Default ports' })"
+$outputContent += "Number of target hosts: $($Targets.Count)"
+$outputContent += "Number of target ports: $($Ports.Count)"
+$outputContent += "Timeout: $Timeout ms"
+$outputContent += "Interval: $Interval ms $(if ($Jitter -gt 0) { "(±$Jitter ms jitter)" })"
+$outputContent += "================================"
+$outputContent += ""
 
 function Test-Port {
     param(
@@ -132,14 +153,38 @@ foreach ($Target in $Targets) {
         }
     }
     
-    # Output all results for this target at once
+    # Output results to console and prepare for file output
     if ($results.Count -gt 0) {
+        # Display to console
         $results | Format-Table -AutoSize
+        
+        # Add to output content for file
+        $outputContent += "Target: $Target"
+        $outputContent += "$('{0,-15} {1,-6} {2}' -f 'ComputerName', 'Port', 'Status')"
+        $outputContent += "$('{0,-15} {1,-6} {2}' -f '------------', '----', '------')"
+        foreach ($result in $results) {
+            $outputContent += "$('{0,-15} {1,-6} {2}' -f $result.ComputerName, $result.Port, $result.Status)"
+        }
+        $outputContent += ""
     }
     else {
         Write-Host "  No results to display for $Target" -ForegroundColor Yellow
+        $outputContent += "Target: $Target"
+        $outputContent += "  No results to display"
+        $outputContent += ""
     }
     Write-Host ""  # Empty line to separate targets
+}
+
+# Write results to file
+try {
+    $outputContent += "================================"
+    $outputContent += "Scan completed: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
+    
+    $outputContent | Out-File -FilePath $Outfile -Encoding UTF8
+    Write-Host "Results saved to: $Outfile" -ForegroundColor Green
+} catch {
+    Write-Error "Failed to write output file: $($_.Exception.Message)"
 }
 
 Write-Host "--------------------------------"

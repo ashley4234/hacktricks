@@ -9,6 +9,7 @@ A high-performance PowerShell port scanner that uses TcpClient for fast and reli
 - **Default port list**: Includes common service ports when no ports are specified
 - **Timing controls**: Configurable intervals and jitter for stealth scanning
 - **Clean output**: Results grouped by target host with formatted tables
+- **File output**: Results automatically saved to text files with timestamps
 - **Closed port visibility**: Show or hide closed/filtered ports
 
 ## Usage
@@ -31,6 +32,7 @@ A high-performance PowerShell port scanner that uses TcpClient for fast and reli
 | `-Timeout` | int | Connection timeout (ms) | `-Timeout 2000` |
 | `-Interval` | int | Delay between port scans (ms) | `-Interval 500` |
 | `-Jitter` | int | Random variation for interval (ms) | `-Jitter 200` |
+| `-Outfile` | string | Output file path | `-Outfile results.txt` |
 
 ### Default Ports
 
@@ -48,6 +50,19 @@ These include common services:
 - **Databases**: 1433 (MSSQL), 1521 (Oracle), 3306 (MySQL), 5432 (PostgreSQL)
 
 ## Examples
+
+### File Output
+
+```powershell
+# Default output file (result_portscan_YYYYMMDD.txt)
+.\scan.ps1 -h 192.168.1.1 -p 22,80,443
+
+# Custom output file
+.\scan.ps1 -h 192.168.1.1 -p 22,80,443 -Outfile "network_scan.txt"
+
+# Full path specification
+.\scan.ps1 -h 192.168.1.1 -Outfile "C:\Reports\scan_results.txt"
+```
 
 ### Basic Scanning
 
@@ -119,6 +134,45 @@ One port per line:
 8080
 ```
 
+## Output Files
+
+### Default File Naming
+When no `-Outfile` parameter is specified, results are automatically saved to:
+```
+result_portscan_YYYYMMDD.txt
+```
+Where YYYYMMDD is the current date (e.g., `result_portscan_20250726.txt`)
+
+### File Content
+Output files contain:
+- Scan configuration and timestamp
+- Formatted results for each target
+- Completion timestamp
+
+### Sample File Output
+```
+Port Scan Results
+Generated: 2025-07-26 14:30:25
+Target source: Command line arguments
+Port source: Default ports
+Number of target hosts: 1
+Number of target ports: 16
+Timeout: 1000 ms
+Interval: 0 ms
+================================
+
+Target: 192.168.1.1
+ComputerName    Port   Status
+------------    ----   ------
+192.168.1.1     21     Closed/Filtered
+192.168.1.1     22     Open
+192.168.1.1     80     Open
+192.168.1.1     443    Open
+
+================================
+Scan completed: 2025-07-26 14:31:45
+```
+
 ## Sample Output
 
 ```
@@ -129,6 +183,7 @@ Number of target hosts: 1
 Number of target ports: 16
 Timeout: 1000 ms
 Interval: 0 ms
+Output file: result_portscan_20250726.txt
 --------------------------------
 Scanning: 192.168.1.1
 
@@ -142,6 +197,7 @@ ComputerName Port Status
 192.168.1.1  443  Open           
 192.168.1.1  445  Closed/Filtered
 
+Results saved to: result_portscan_20250726.txt
 --------------------------------
 Scan completed.
 ```
@@ -181,6 +237,7 @@ The script will exit with an error if:
 2. **"File not found"**: Check file paths and permissions
 3. **All ports show as closed**: Check network connectivity and firewall rules
 4. **Slow performance**: Reduce timeout or add `-HideClosed` switch
+5. **"Failed to write output file"**: Check write permissions and disk space
 
 ### Tips
 
@@ -188,3 +245,4 @@ The script will exit with an error if:
 - Use `-HideClosed` for faster scans when only interested in open ports
 - Adjust timeout based on network conditions (local: 500ms, remote: 2000ms+)
 - Use intervals for rate limiting and stealth
+- Output files are saved with UTF-8 encoding for compatibility
